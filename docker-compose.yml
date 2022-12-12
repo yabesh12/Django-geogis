@@ -1,0 +1,42 @@
+version: '3'
+services:
+  db:
+    image: kartoza/postgis
+    environment:
+      - POSTGRES_USER=core_base_user
+      - POSTGRES_PASSWORD=corePassword
+      - POSTGRES_DB=coreDb
+    volumes:
+      - core__db_data:/var/lib/postgresql/data
+    networks:
+      - core_backend_network
+    ports:
+      - "5432:5432"
+
+  app:
+    restart: always
+    build: .
+    depends_on:
+      - db
+    env_file: .env
+    command: python manage.py runserver 0.0.0.0:8009
+    environment:
+      - DJANGO_COLLECT_STATIC=off
+      - DJANGO_MANAGEPY_MIGRATE=on
+    links:
+      - db:postgres
+    ports:
+      - 8009:8009
+    volumes:
+      - .:/app
+    networks:
+      - core_backend_network
+volumes:
+  core__db_data:
+    driver: local
+  static_volume:
+    driver: local
+
+networks:
+  core_backend_network:
+    driver: bridge
